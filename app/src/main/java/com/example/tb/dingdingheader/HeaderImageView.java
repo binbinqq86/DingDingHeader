@@ -2,35 +2,25 @@ package com.example.tb.dingdingheader;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Xfermode;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.Handler;
 import android.support.annotation.ColorRes;
 import android.support.annotation.Nullable;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.drawable.GlideDrawable;
-import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.target.Target;
 
 import java.util.List;
 
@@ -204,7 +194,7 @@ public class HeaderImageView extends View {
                         }
                     });
         } else {
-            recycleBit(list.get(index).bitmap);
+            recycleBitmap(list.get(index).bitmap);
             invalidate();
         }
     }
@@ -657,31 +647,31 @@ public class HeaderImageView extends View {
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         if (count == 1) {
-            recycleBit(list.get(0).bitmap);
+            recycleBitmap(list.get(0).bitmap);
         } else if (count == 2) {
-            recycleBit(list.get(0).bitmap);
-            recycleBit(list.get(1).bitmap);
+            recycleBitmap(list.get(0).bitmap);
+            recycleBitmap(list.get(1).bitmap);
         } else if (count == 3) {
-            recycleBit(list.get(0).bitmap);
-            recycleBit(list.get(1).bitmap);
-            recycleBit(list.get(2).bitmap);
+            recycleBitmap(list.get(0).bitmap);
+            recycleBitmap(list.get(1).bitmap);
+            recycleBitmap(list.get(2).bitmap);
         } else if (count >= 4) {
-            recycleBit(list.get(0).bitmap);
-            recycleBit(list.get(1).bitmap);
-            recycleBit(list.get(2).bitmap);
-            recycleBit(list.get(3).bitmap);
+            recycleBitmap(list.get(0).bitmap);
+            recycleBitmap(list.get(1).bitmap);
+            recycleBitmap(list.get(2).bitmap);
+            recycleBitmap(list.get(3).bitmap);
         }
     }
     
-    private void recycleBit(Bitmap bitmap) {
+    private void recycleBitmap(Bitmap bitmap) {
         if (bitmap != null && !bitmap.isRecycled()) {
             bitmap.recycle();
             bitmap = null;
         }
     }
     
-    private boolean checkBitmap(Bitmap bit) {
-        if (bit == null || bit.isRecycled()) {
+    private boolean checkBitmap(Bitmap bitmap) {
+        if (bitmap == null || bitmap.isRecycled()) {
             return false;
         }
         return true;
