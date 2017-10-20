@@ -98,7 +98,6 @@ public class HeaderImageView extends View {
         
         space = dp2Px(2f);
         yDelta = space;
-//        setBackgroundColor(Color.BLUE);
     }
     
     @Override
