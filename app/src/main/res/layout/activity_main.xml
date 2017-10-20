@@ -50,4 +50,35 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
+    
+    <CheckBox
+        android:id="@+id/cb1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1has pic"
+        app:layout_constraintTop_toBottomOf="@id/button1"/>
+    
+    <CheckBox
+        android:id="@+id/cb2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="2has pic"
+        app:layout_constraintLeft_toRightOf="@id/cb1"
+        app:layout_constraintTop_toBottomOf="@id/button1"/>
+    
+    <CheckBox
+        android:id="@+id/cb3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="3has pic"
+        app:layout_constraintLeft_toRightOf="@id/cb2"
+        app:layout_constraintTop_toBottomOf="@id/button1"/>
+    
+    <CheckBox
+        android:id="@+id/cb4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="4has pic"
+        app:layout_constraintLeft_toRightOf="@id/cb3"
+        app:layout_constraintTop_toBottomOf="@id/button1"/>
 </android.support.constraint.ConstraintLayout>

@@ -162,22 +162,25 @@ public class HeaderImageView extends View {
             count = list.size();
         }
         invalidate();
+        if (width > 0 && height > 0) {
+            dealPic();
+        }
     }
     
     /**
      * 默认显示底色+文字，有头像则去加载，完成后绘制出来
      */
-    private void dealPic() {
-        if(count==1){
+    public void dealPic() {
+        if (count == 1) {
             dealPicWithIndex(0);
-        }else if(count==2){
+        } else if (count == 2) {
             dealPicWithIndex(0);
             dealPicWithIndex(1);
-        }else if(count==3){
+        } else if (count == 3) {
             dealPicWithIndex(0);
             dealPicWithIndex(1);
             dealPicWithIndex(2);
-        }else if(count>=4){
+        } else if (count >= 4) {
             dealPicWithIndex(0);
             dealPicWithIndex(1);
             dealPicWithIndex(2);
@@ -186,43 +189,23 @@ public class HeaderImageView extends View {
     }
     
     private void dealPicWithIndex(final int index) {
-        int w=width;
-        int h=height;
-        if(count==2){
-            h/=2;
-        }
-        if(count==3){
-            if(index==0){
-                h/=2;
-            }else{
-                h/=2;
-                w/=2;
-            }
-        }
-        if(count==4){
-            h/=2;
-            w/=2;
-        }
         if (!TextUtils.isEmpty(list.get(index).uri)) {
             Glide.with(getContext())
                     .load(list.get(index).uri)
                     .asBitmap()
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .override(w, h)
+                    .override(width, height)//宽高统一存为控件大小
                     .centerCrop()
-                    .listener(new RequestListener<String, Bitmap>() {
+                    .into(new SimpleTarget<Bitmap>() {
                         @Override
-                        public boolean onException(Exception e, String model, Target<Bitmap> target, boolean isFirstResource) {
-                            return false;
-                        }
-                
-                        @Override
-                        public boolean onResourceReady(Bitmap resource, String model, Target<Bitmap> target, boolean isFromMemoryCache, boolean isFirstResource) {
-                            list.get(index).bitmap=resource;
+                        public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                            list.get(index).bitmap = resource;
                             postInvalidate();
-                            return false;
                         }
-                    }).preload();
+                    });
+        } else {
+            recycleBit(list.get(index).bitmap);
+            invalidate();
         }
     }
     
@@ -260,121 +243,276 @@ public class HeaderImageView extends View {
     }
     
     private void deal4(Canvas canvas) {
-        //上面两个字==========================================================
-        mPaint.setColor(getBgColor(list.get(0).id));
-        RectF rectf = new RectF(0f, 0f, width - space / 2f, height - space / 2f);
-        //顺时针角度，3点钟方向为0度
-        canvas.drawArc(rectf, 180f, 90f, true, mPaint);
-        //画名字
         textPaint.setTextSize(textSizeOther);
-        String name = list.get(0).presentName;
-        name = name.length() > 1 ? name.substring(name.length() - 1, name.length()) : name;
-        if (textColor != 0) {
-            textPaint.setColor(textColor);
-        }
-        //baseLine计算参考：http://blog.csdn.net/harvic880925/article/details/50423762
         Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
+        //baseLine计算参考：http://blog.csdn.net/harvic880925/article/details/50423762
         float baseline = (height / 2f - space / 2f) / 2f + (fontMetrics.bottom - fontMetrics.top) / 2f - fontMetrics.bottom;
-        float x = (width / 2f - space / 2f - textPaint.measureText(name)) / 2f;
-        canvas.drawText(name, x + xDelta, baseline + yDelta, textPaint);
+        //上面两个字==========================================================
+        if (checkBitmap(list.get(0).bitmap)) {
+            leftTop(canvas, 0);
+        } else {
+            mPaint.setColor(getBgColor(list.get(0).id));
+            RectF rectf = new RectF(0f, 0f, width - space / 2f, height - space / 2f);
+            //顺时针角度，3点钟方向为0度
+            canvas.drawArc(rectf, 180f, 90f, true, mPaint);
+            //画名字
+            String name = list.get(0).presentName;
+            name = name.length() > 1 ? name.substring(name.length() - 1, name.length()) : name;
+            if (textColor != 0) {
+                textPaint.setColor(textColor);
+            }
+            float x = (width / 2f - space / 2f - textPaint.measureText(name)) / 2f;
+            canvas.drawText(name, x + xDelta, baseline + yDelta, textPaint);
+        }
         
-        mPaint.setColor(getBgColor(list.get(1).id));
-        RectF rectf0 = new RectF(space / 2f, 0f, width, height - space / 2f);
-        canvas.drawArc(rectf0, 270f, 90f, true, mPaint);
-        //画名字
-        String name0 = list.get(1).presentName;
-        name0 = name0.length() > 1 ? name0.substring(name0.length() - 1, name0.length()) : name0;
-        float x0 = width / 2f + space / 2f + (width / 2f - space / 2f - textPaint.measureText(name0)) / 2f;
-        canvas.drawText(name0, x0 - xDelta, baseline + yDelta, textPaint);
+        //================================================
+        if (checkBitmap(list.get(1).bitmap)) {
+            rightTop(canvas, 1);
+        } else {
+            mPaint.setColor(getBgColor(list.get(1).id));
+            RectF rectf0 = new RectF(space / 2f, 0f, width, height - space / 2f);
+            canvas.drawArc(rectf0, 270f, 90f, true, mPaint);
+            //画名字
+            String name0 = list.get(1).presentName;
+            name0 = name0.length() > 1 ? name0.substring(name0.length() - 1, name0.length()) : name0;
+            float x0 = width / 2f + space / 2f + (width / 2f - space / 2f - textPaint.measureText(name0)) / 2f;
+            canvas.drawText(name0, x0 - xDelta, baseline + yDelta, textPaint);
+        }
         
         //下面两个字============================================
-        mPaint.setColor(getBgColor(list.get(2).id));
-        RectF rectf1 = new RectF(0f, space / 2f, width - space / 2f, height);
-        //把半径的线条也绘制出来
-        canvas.drawArc(rectf1, 90f, 90f, true, mPaint);
-        //画名字
-        String name1 = list.get(2).presentName;
-        name1 = name1.length() > 1 ? name1.substring(name1.length() - 1, name1.length()) : name1;
         float centerY = height * 0.75f - space * 0.25f;
         float baseline1 = centerY + (fontMetrics.bottom - fontMetrics.top) / 2f - fontMetrics.bottom;
-        float x1 = (width / 2f - space / 2f - textPaint.measureText(name1)) / 2f;
-        canvas.drawText(name1, x1 + xDelta, baseline1 - yDelta, textPaint);
+        if (checkBitmap(list.get(2).bitmap)) {
+            leftBottom(canvas, 2);
+        } else {
+            mPaint.setColor(getBgColor(list.get(2).id));
+            RectF rectf1 = new RectF(0f, space / 2f, width - space / 2f, height);
+            //把半径的线条也绘制出来
+            canvas.drawArc(rectf1, 90f, 90f, true, mPaint);
+            //画名字
+            String name1 = list.get(2).presentName;
+            name1 = name1.length() > 1 ? name1.substring(name1.length() - 1, name1.length()) : name1;
+            float x1 = (width / 2f - space / 2f - textPaint.measureText(name1)) / 2f;
+            canvas.drawText(name1, x1 + xDelta, baseline1 - yDelta, textPaint);
+        }
         
-        mPaint.setColor(getBgColor(list.get(3).id));
-        RectF rectf2 = new RectF(space / 2f, space / 2f, width, height);
-        canvas.drawArc(rectf2, 0f, 90f, true, mPaint);
-        //画名字
-        String name2 = list.get(3).presentName;
-        name2 = name2.length() > 1 ? name2.substring(name2.length() - 1, name2.length()) : name2;
-        float x2 = width / 2f + space / 2f + (width / 2f - space / 2f - textPaint.measureText(name2)) / 2f;
-        canvas.drawText(name2, x2 - xDelta, baseline1 - yDelta, textPaint);
+        //=======================================================
+        if (checkBitmap(list.get(3).bitmap)) {
+            rightBottom(canvas, 3);
+        } else {
+            mPaint.setColor(getBgColor(list.get(3).id));
+            RectF rectf2 = new RectF(space / 2f, space / 2f, width, height);
+            canvas.drawArc(rectf2, 0f, 90f, true, mPaint);
+            //画名字
+            String name2 = list.get(3).presentName;
+            name2 = name2.length() > 1 ? name2.substring(name2.length() - 1, name2.length()) : name2;
+            float x2 = width / 2f + space / 2f + (width / 2f - space / 2f - textPaint.measureText(name2)) / 2f;
+            canvas.drawText(name2, x2 - xDelta, baseline1 - yDelta, textPaint);
+        }
+    }
+    
+    /**
+     * 四个图的右上部
+     *
+     * @param canvas
+     * @param index
+     */
+    private void rightTop(Canvas canvas, int index) {
+        //新建Canvas层级
+        int saveCount = canvas.saveLayer(0f, 0f, width, height, null, Canvas.ALL_SAVE_FLAG);
+        //绘制底图——原来canvas上的内容dst(只绘制图片中间部分)
+        RectF dstf = new RectF((width + space) / 2f, 0f, width, (height - space) / 2f);//图片要绘制的画板区域
+        canvas.drawBitmap(Bitmap.createScaledBitmap(list.get(index).bitmap, width / 2, height / 2, false), null, dstf, mPaint);
+        
+        //生成圆形图片蒙版src
+        Bitmap mask = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvasMask = new Canvas(mask);
+        canvasMask.drawCircle(width / 2f, height / 2f, width / 2f, mPaint);
+        
+        //设置交叉模式，绘制蒙版
+        mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+        canvas.drawBitmap(mask, 0, 0, mPaint);
+        
+        //还原
+        mPaint.setXfermode(null);
+        //将如上画的层覆盖到原有层级上
+        canvas.restoreToCount(saveCount);
+    }
+    
+    /**
+     * 四个图的左上部
+     *
+     * @param canvas
+     * @param index
+     */
+    private void leftTop(Canvas canvas, int index) {
+        //新建Canvas层级
+        int saveCount = canvas.saveLayer(0f, 0f, width, height, null, Canvas.ALL_SAVE_FLAG);
+        //绘制底图——原来canvas上的内容dst(只绘制图片中间部分)
+        RectF dstf = new RectF(0f, 0f, (width - space) / 2f, (height - space) / 2f);//图片要绘制的画板区域
+        canvas.drawBitmap(Bitmap.createScaledBitmap(list.get(index).bitmap, width / 2, height / 2, false), null, dstf, mPaint);
+        
+        //生成圆形图片蒙版src
+        Bitmap mask = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvasMask = new Canvas(mask);
+        canvasMask.drawCircle(width / 2f, height / 2f, width / 2f, mPaint);
+        
+        //设置交叉模式，绘制蒙版
+        mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+        canvas.drawBitmap(mask, 0, 0, mPaint);
+        
+        //还原
+        mPaint.setXfermode(null);
+        //将如上画的层覆盖到原有层级上
+        canvas.restoreToCount(saveCount);
     }
     
     private void deal3(Canvas canvas) {
-        mPaint.setColor(getBgColor(list.get(0).id));
-        RectF rectf = new RectF(0f, 0f, width, height - space / 2f);
-        //顺时针角度，3点钟方向为0度
-        canvas.drawArc(rectf, 180f, 180f, false, mPaint);
-        //画名字
         textPaint.setTextSize(textSizeOther);
-        String name = list.get(0).presentName;
-        name = name.length() > 2 ? name.substring(name.length() - 2, name.length()) : name;
-        if (textColor != 0) {
-            textPaint.setColor(textColor);
-        }
-        //baseLine计算参考：http://blog.csdn.net/harvic880925/article/details/50423762
         Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
-        float baseline = (height / 2f - space / 2f) / 2f + (fontMetrics.bottom - fontMetrics.top) / 2f - fontMetrics.bottom;
-        float x = (width - textPaint.measureText(name)) / 2f;
-        canvas.drawText(name, x, baseline + yDelta, textPaint);
+        if (checkBitmap(list.get(0).bitmap)) {
+            top(canvas);
+            
+        } else {
+            mPaint.setColor(getBgColor(list.get(0).id));
+            RectF rectf = new RectF(0f, 0f, width, height - space / 2f);
+            //顺时针角度，3点钟方向为0度
+            canvas.drawArc(rectf, 180f, 180f, false, mPaint);
+            //画名字
+            String name = list.get(0).presentName;
+            name = name.length() > 2 ? name.substring(name.length() - 2, name.length()) : name;
+            if (textColor != 0) {
+                textPaint.setColor(textColor);
+            }
+            //baseLine计算参考：http://blog.csdn.net/harvic880925/article/details/50423762
+            float baseline = (height / 2f - space / 2f) / 2f + (fontMetrics.bottom - fontMetrics.top) / 2f - fontMetrics.bottom;
+            float x = (width - textPaint.measureText(name)) / 2f;
+            canvas.drawText(name, x, baseline + yDelta, textPaint);
+        }
         
         //下面两个字============================================
-        mPaint.setColor(getBgColor(list.get(1).id));
-        RectF rectf1 = new RectF(0f, space / 2f, width - space / 2f, height);
-        //把半径的线条也绘制出来
-        canvas.drawArc(rectf1, 90f, 90f, true, mPaint);
-        //画名字
-        String name1 = list.get(1).presentName;
-        name1 = name1.length() > 1 ? name1.substring(name1.length() - 1, name1.length()) : name1;
         float centerY = height * 0.75f - space * 0.25f;
         float baseline1 = centerY + (fontMetrics.bottom - fontMetrics.top) / 2f - fontMetrics.bottom;
-        float x1 = (width / 2f - space / 2f - textPaint.measureText(name1)) / 2f;
-        canvas.drawText(name1, x1 + xDelta, baseline1 - yDelta, textPaint);//x方向加个偏移量，不是正中间
+        if (checkBitmap(list.get(1).bitmap)) {
+            leftBottom(canvas, 1);
+        } else {
+            mPaint.setColor(getBgColor(list.get(1).id));
+            RectF rectf1 = new RectF(0f, space / 2f, width - space / 2f, height);
+            //把半径的线条也绘制出来
+            canvas.drawArc(rectf1, 90f, 90f, true, mPaint);
+            //画名字
+            String name1 = list.get(1).presentName;
+            name1 = name1.length() > 1 ? name1.substring(name1.length() - 1, name1.length()) : name1;
+            float x1 = (width / 2f - space / 2f - textPaint.measureText(name1)) / 2f;
+            canvas.drawText(name1, x1 + xDelta, baseline1 - yDelta, textPaint);//x方向加个偏移量，不是正中间
+        }
         
-        mPaint.setColor(getBgColor(list.get(2).id));
-        RectF rectf2 = new RectF(space / 2f, space / 2f, width, height);
-        canvas.drawArc(rectf2, 0f, 90f, true, mPaint);
-        //画名字
-        String name2 = list.get(2).presentName;
-        name2 = name2.length() > 1 ? name2.substring(name2.length() - 1, name2.length()) : name2;
-        float x2 = width / 2f + space / 2f + (width / 2f - space / 2f - textPaint.measureText(name2)) / 2f;
-        canvas.drawText(name2, x2 - xDelta, baseline1 - yDelta, textPaint);
+        //=====================================================
+        if (checkBitmap(list.get(2).bitmap)) {
+            rightBottom(canvas, 2);
+        } else {
+            mPaint.setColor(getBgColor(list.get(2).id));
+            RectF rectf2 = new RectF(space / 2f, space / 2f, width, height);
+            canvas.drawArc(rectf2, 0f, 90f, true, mPaint);
+            //画名字
+            String name2 = list.get(2).presentName;
+            name2 = name2.length() > 1 ? name2.substring(name2.length() - 1, name2.length()) : name2;
+            float x2 = width / 2f + space / 2f + (width / 2f - space / 2f - textPaint.measureText(name2)) / 2f;
+            canvas.drawText(name2, x2 - xDelta, baseline1 - yDelta, textPaint);
+        }
+    }
+    
+    /**
+     * 处理两张或者三张图片的上部
+     *
+     * @param canvas
+     */
+    private void top(Canvas canvas) {
+        //新建Canvas层级
+        int saveCount = canvas.saveLayer(0f, 0f, width, height, null, Canvas.ALL_SAVE_FLAG);
+        //绘制底图——原来canvas上的内容dst(只绘制图片中间部分)
+        Rect srcf = new Rect(0, (int) ((height - space) / 4), width, (int) ((height - space) * 3 / 4));//要绘制的图片本身内容区域
+        RectF dstf = new RectF(0f, 0f, width, (height - space) / 2f);//图片要绘制的画板区域
+        canvas.drawBitmap(list.get(0).bitmap, srcf, dstf, mPaint);
+        
+        //生成圆形图片蒙版src
+        Bitmap mask = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvasMask = new Canvas(mask);
+        canvasMask.drawCircle(width / 2f, height / 2f, width / 2f, mPaint);
+        
+        //设置交叉模式，绘制蒙版
+        mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+        canvas.drawBitmap(mask, 0, 0, mPaint);
+        
+        //还原
+        mPaint.setXfermode(null);
+        //将如上画的层覆盖到原有层级上
+        canvas.restoreToCount(saveCount);
+    }
+    
+    /**
+     * 处理三或四张图的左下部
+     *
+     * @param canvas
+     * @param index
+     */
+    private void leftBottom(Canvas canvas, int index) {
+        //新建Canvas层级
+        int saveCount = canvas.saveLayer(0f, 0f, width, height, null, Canvas.ALL_SAVE_FLAG);
+        //绘制底图——原来canvas上的内容dst(只绘制图片中间部分)
+        RectF dstf = new RectF(0f, (height + space) / 2f, (width - space) / 2f, height);//图片要绘制的画板区域
+        canvas.drawBitmap(Bitmap.createScaledBitmap(list.get(index).bitmap, width / 2, height / 2, false), null, dstf, mPaint);
+        
+        //生成圆形图片蒙版src
+        Bitmap mask = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvasMask = new Canvas(mask);
+        canvasMask.drawCircle(width / 2f, height / 2f, width / 2f, mPaint);
+        
+        //设置交叉模式，绘制蒙版
+        mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+        canvas.drawBitmap(mask, 0, 0, mPaint);
+        
+        //还原
+        mPaint.setXfermode(null);
+        //将如上画的层覆盖到原有层级上
+        canvas.restoreToCount(saveCount);
+    }
+    
+    /**
+     * 处理三或四张图的右下部
+     *
+     * @param canvas
+     * @param index
+     */
+    private void rightBottom(Canvas canvas, int index) {
+        //新建Canvas层级
+        int saveCount = canvas.saveLayer(0f, 0f, width, height, null, Canvas.ALL_SAVE_FLAG);
+        //绘制底图——原来canvas上的内容dst(只绘制图片中间部分)
+        RectF dstf = new RectF((width + space) / 2f, (height + space) / 2f, width, height);//图片要绘制的画板区域
+        canvas.drawBitmap(Bitmap.createScaledBitmap(list.get(index).bitmap, width / 2, height / 2, false), null, dstf, mPaint);
+        
+        //生成圆形图片蒙版src
+        Bitmap mask = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvasMask = new Canvas(mask);
+        canvasMask.drawCircle(width / 2f, height / 2f, width / 2f, mPaint);
+        
+        //设置交叉模式，绘制蒙版
+        mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+        canvas.drawBitmap(mask, 0, 0, mPaint);
+        
+        //还原
+        mPaint.setXfermode(null);
+        //将如上画的层覆盖到原有层级上
+        canvas.restoreToCount(saveCount);
     }
     
     private void deal2(Canvas canvas) {
         textPaint.setTextSize(textSizeOther);
         Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
-        if(list.get(0).bitmap!=null){
+        if (checkBitmap(list.get(0).bitmap)) {
             //新建Canvas层级
-            int saveCount=canvas.saveLayer(0f,0f,width,height/2f,null,Canvas.ALL_SAVE_FLAG);
-            //绘制底图——原来canvas上的内容dst
-            canvas.drawBitmap(list.get(0).bitmap,0,0,mPaint);
-    
-            //生成圆形图片蒙版src
-            Bitmap mask = Bitmap.createBitmap(width, height/2,Bitmap.Config.ARGB_8888);
-            Canvas canvasMask = new Canvas(mask);
-            RectF rf=new RectF(0f,0f,width,height);
-            canvasMask.drawArc(rf,180f,180f,false, mPaint);
-    
-            //设置交叉模式
-            mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
-            canvas.drawBitmap(mask,0,0,mPaint);
-    
-            //还原
-            mPaint.setXfermode(null);
-            //将如上画的层覆盖到原有层级上
-            canvas.restoreToCount(saveCount);
-        }else{
+            top(canvas);
+        } else {
             mPaint.setColor(getBgColor(list.get(0).id));
             RectF rectf = new RectF(0f, 0f, width, height - space / 2f);
             //顺时针角度，3点钟方向为0度
@@ -393,40 +531,63 @@ public class HeaderImageView extends View {
         }
         
         //======================================================
-        mPaint.setColor(getBgColor(list.get(1).id));
-        RectF rectf1 = new RectF(0f, space / 2f, width, height);
-        canvas.drawArc(rectf1, 0f, 180f, false, mPaint);
-        //画名字
-        String name1 = list.get(1).presentName;
-        name1 = name1.length() > 2 ? name1.substring(name1.length() - 2, name1.length()) : name1;
-        float centerY1 = height * 0.75f - space * 0.25f;
-        float baseline1 = centerY1 + (fontMetrics.bottom - fontMetrics.top) / 2f - fontMetrics.bottom;
-        float x1 = (width - textPaint.measureText(name1)) / 2f;
-        canvas.drawText(name1, x1, baseline1 - yDelta, textPaint);
-    }
-    
-    private void deal1(final Canvas canvas) {
-        if(list.get(0).bitmap!=null){
+        if (checkBitmap(list.get(1).bitmap)) {
             //新建Canvas层级
-            int saveCount=canvas.saveLayer(0f,0f,width,height,null,Canvas.ALL_SAVE_FLAG);
-            //绘制底图——原来canvas上的内容dst
-            canvas.drawBitmap(list.get(0).bitmap,0,0,mPaint);
-    
-            //生成圆形图片蒙版src
-            Bitmap mask = Bitmap.createBitmap(width, height,Bitmap.Config.ARGB_8888);
-            Canvas canvasMask = new Canvas(mask);
-            RectF rf=new RectF(0f,0f,width,height);
-            canvasMask.drawOval(rf, mPaint);
+            int saveCount = canvas.saveLayer(0f, 0f, width, height, null, Canvas.ALL_SAVE_FLAG);
+            //绘制底图——原来canvas上的内容dst(只绘制图片中间部分)
+            Rect srcf = new Rect(0, (int) ((height - space) / 4), width, (int) ((height - space) * 3 / 4));//要绘制的图片本身内容区域
+            RectF dstf = new RectF(0f, (height + space) / 2f, width, height);//图片要绘制的画板区域
+            canvas.drawBitmap(list.get(1).bitmap, srcf, dstf, mPaint);
             
-            //设置交叉模式
+            //生成圆形图片蒙版src
+            Bitmap mask = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas canvasMask = new Canvas(mask);
+            canvasMask.drawCircle(width / 2f, height / 2f, width / 2f, mPaint);
+            
+            //设置交叉模式，绘制蒙版
             mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
-            canvas.drawBitmap(mask,0,0,mPaint);
+            canvas.drawBitmap(mask, 0f, 0f, mPaint);
             
             //还原
             mPaint.setXfermode(null);
             //将如上画的层覆盖到原有层级上
             canvas.restoreToCount(saveCount);
-        }else{
+        } else {
+            mPaint.setColor(getBgColor(list.get(1).id));
+            RectF rectf1 = new RectF(0f, space / 2f, width, height);
+            canvas.drawArc(rectf1, 0f, 180f, false, mPaint);
+            //画名字
+            String name1 = list.get(1).presentName;
+            name1 = name1.length() > 2 ? name1.substring(name1.length() - 2, name1.length()) : name1;
+            float centerY1 = height * 0.75f - space * 0.25f;
+            float baseline1 = centerY1 + (fontMetrics.bottom - fontMetrics.top) / 2f - fontMetrics.bottom;
+            float x1 = (width - textPaint.measureText(name1)) / 2f;
+            canvas.drawText(name1, x1, baseline1 - yDelta, textPaint);
+        }
+    }
+    
+    private void deal1(final Canvas canvas) {
+        if (checkBitmap(list.get(0).bitmap)) {
+            //新建Canvas层级
+            int saveCount = canvas.saveLayer(0f, 0f, width, height, null, Canvas.ALL_SAVE_FLAG);
+            //绘制底图——原来canvas上的内容dst
+            canvas.drawBitmap(list.get(0).bitmap, 0, 0, mPaint);
+            
+            //生成圆形图片蒙版src
+            Bitmap mask = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            Canvas canvasMask = new Canvas(mask);
+            RectF rf = new RectF(0f, 0f, width, height);
+            canvasMask.drawOval(rf, mPaint);
+            
+            //设置交叉模式，绘制蒙版
+            mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
+            canvas.drawBitmap(mask, 0, 0, mPaint);
+            
+            //还原
+            mPaint.setXfermode(null);
+            //将如上画的层覆盖到原有层级上
+            canvas.restoreToCount(saveCount);
+        } else {
             mPaint.setColor(getBgColor(list.get(0).id));
             canvas.drawCircle(width / 2f, height / 2f, width / 2f, mPaint);
             //画名字
@@ -446,6 +607,7 @@ public class HeaderImageView extends View {
     
     /**
      * 根据用户id生成的底色，规则可以自定义
+     *
      * @param id
      * @return
      */
@@ -489,5 +651,39 @@ public class HeaderImageView extends View {
     
     private float sp2Px(float sp) {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, getResources().getDisplayMetrics());
+    }
+    
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (count == 1) {
+            recycleBit(list.get(0).bitmap);
+        } else if (count == 2) {
+            recycleBit(list.get(0).bitmap);
+            recycleBit(list.get(1).bitmap);
+        } else if (count == 3) {
+            recycleBit(list.get(0).bitmap);
+            recycleBit(list.get(1).bitmap);
+            recycleBit(list.get(2).bitmap);
+        } else if (count >= 4) {
+            recycleBit(list.get(0).bitmap);
+            recycleBit(list.get(1).bitmap);
+            recycleBit(list.get(2).bitmap);
+            recycleBit(list.get(3).bitmap);
+        }
+    }
+    
+    private void recycleBit(Bitmap bitmap) {
+        if (bitmap != null && !bitmap.isRecycled()) {
+            bitmap.recycle();
+            bitmap = null;
+        }
+    }
+    
+    private boolean checkBitmap(Bitmap bit) {
+        if (bit == null || bit.isRecycled()) {
+            return false;
+        }
+        return true;
     }
 }
