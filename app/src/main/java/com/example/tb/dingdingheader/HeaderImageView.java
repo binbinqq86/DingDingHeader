@@ -215,7 +215,7 @@ public class HeaderImageView extends View {
                 return;
             }
         }
-        //=================此处预留图片头像的处理，暂时只考虑底色+名字，后续可扩张============
+
         if (count == 1) {
             //一个人（两个汉字）
             deal1(canvas);
