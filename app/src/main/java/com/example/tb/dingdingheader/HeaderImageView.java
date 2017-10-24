@@ -27,6 +27,7 @@ import java.util.List;
 /**
  * Created by : tb on 2017/10/18 上午11:22.
  * Description :头像封装：可用于各种情况下的头像替代（群聊，单聊，列表，资料等。。。）
+ * <a href="http://blog.csdn.net/binbinqq86/article/details/78329238">详情</a>
  */
 public class HeaderImageView extends View {
     private static final String TAG = "HeaderImageView";
